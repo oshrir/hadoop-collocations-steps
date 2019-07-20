@@ -31,8 +31,8 @@ public class Step3 {
             String line = value.toString();
 
             String[] split = line.split("\\s+");
-            Text word = new Text( split[0] + " " + split[2] + " " + astrix);
-            Text bgram = new Text( flipArrayValues(split, 1, 2));
+            Text word = new Text(split[0] + " " + split[2] + " " + astrix);
+            Text bgram = new Text(flipArrayValues(split, 1, 2));
 
             context.write(word, new IntWritable(Integer.parseInt(split[3]))); // changed
             context.write(bgram, zero); // changed
@@ -82,22 +82,21 @@ public class Step3 {
             else {
 
                 double wordNPMI = CalculateNPMI(key.toString(), sum);
-                context.write(new Text(split[0] + " " + split[2] + " " + split[1]),
-                        new DoubleWritable(wordNPMI));
+                if (wordNPMI > -1) {
+                    context.write(new Text(split[0] + " " + split[2] + " " + split[1]),
+                            new DoubleWritable(wordNPMI));
+                }
             }
 
         }
 
         private static double CalculateNPMI(String key, int w2Count){ //TODO implement
             String[] split = key.split("\\s+");
-            for (String str : split) {
-                System.out.print(str + " ");
-            }
-            System.out.println(split);
             int bgramCount = Integer.parseInt(split[3]);
             int w1Count = Integer.parseInt(split[4]);
             double pmi = Math.log(bgramCount) + Math.log(N) - Math.log(w1Count) - Math.log(w2Count);
-            return pmi / (Math.log(N / bgramCount));
+            double p = Math.log(N / bgramCount);
+            return p == 0 ? -1 : pmi / p;
         }
     }
 
@@ -105,10 +104,11 @@ public class Step3 {
 
         @Override
         public int getPartition(Text key, IntWritable value, int numPartitions) {
-            //This will group the keys in the reducers based on the first word
-            String[] split = key.toString().split("\\s+");
-            String firstWord = split[0] + " " + split[1];
-            return (firstWord.hashCode() & Integer.MAX_VALUE) % numPartitions;
+            //This will group the keys in the reducers based on the decade
+            /*String[] split = key.toString().split("\\s+");
+            String firstWord = split[0] + " " + split[1];*/
+            String decade = key.toString().split("\\s+")[0];
+            return (decade.hashCode() & Integer.MAX_VALUE) % numPartitions;
         }
     }
 

@@ -1,6 +1,7 @@
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -16,11 +17,9 @@ import java.io.IOException;
 
 public class Step4 {
 
-    private static final String bucketName = "dsp_assignment2";
     private static final String astrix = "*";
 
     public static class MyMapper extends Mapper<LongWritable, Text, Text, DoubleWritable> {
-        private final static DoubleWritable zero = new DoubleWritable(0);
 
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             // value format now: [decade] [w1] [w2] [npmi]
@@ -61,9 +60,11 @@ public class Step4 {
 
         @Override
         public int getPartition(Text key, DoubleWritable value, int numPartitions) {
-            //This will group the keys in the reducers based on the first word
-            String firstWord = key.toString().split("\\s+")[0];
-            return (firstWord.hashCode() & Integer.MAX_VALUE) % numPartitions;
+            //This will group the keys in the reducers based on the decade
+            /*String[] split = key.toString().split("\\s+");
+            String firstWord = split[0] + " " + split[1];*/
+            String decade = key.toString().split("\\s+")[0];
+            return (decade.hashCode() & Integer.MAX_VALUE) % numPartitions;
         }
     }
 

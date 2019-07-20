@@ -51,9 +51,9 @@ public class Step5 {
 
         @Override
         public int getPartition(Text key, Text value, int numPartitions) {
-            //This will group the keys in the reducers based on the first word
-            String firstWord = key.toString().split("\\s+")[0];
-            return (firstWord.hashCode() & Integer.MAX_VALUE) % numPartitions;
+            //This will group the keys in the reducers based on the decade
+            String decade = key.toString().split("\\s+")[0];
+            return (decade.hashCode() & Integer.MAX_VALUE) % numPartitions;
         }
     }
 
@@ -78,6 +78,6 @@ public class Step5 {
     }
 
     public static boolean isCollocation(double npmi, double relnpmi, double minPmi, double relMinPmi) {
-        return npmi >= minPmi | relnpmi >= relMinPmi;
+        return npmi >= minPmi || relnpmi >= relMinPmi;
     }
 }

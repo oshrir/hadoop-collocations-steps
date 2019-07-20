@@ -16,21 +16,20 @@ import java.io.IOException;
 
 public class Step2 {
 
-    private static final String bucketName = "dsp_assignment2";
     private static final String astrix = "*";
 
     public static class MyMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
-        private final static IntWritable one = new IntWritable(1);
         private final static IntWritable zero = new IntWritable(0);
+        private Text keyToWrite = new Text("");
 
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             // value format now: [decade] [w1] [w2] [bgram count]
             String line = value.toString();
 
             String[] split = line.split("\\s+");
-            Text word = new Text( split[0] + " " + split[1] + " " +astrix);
+            keyToWrite.set( split[0] + " " + split[1] + " " + astrix);
 
-            context.write(word, new IntWritable(Integer.parseInt(split[3]))); // changed
+            context.write(keyToWrite, new IntWritable(Integer.parseInt(split[3]))); // changed
             context.write(value, zero); // changed
         }
     }
@@ -44,8 +43,8 @@ public class Step2 {
             String[] split = key.toString().split(" ");
             if(split[2].equals(astrix)) {
                 sum = 0;
-                for (IntWritable val : values) { //TODO can we assume the key arrives with all it's values?
-                    sum += val.get();            // i think we can, but we should check it by testing
+                for (IntWritable val : values) {
+                    sum += val.get();
                 }
             }
             else {
@@ -55,15 +54,15 @@ public class Step2 {
         }
     }
 
-
     public static class PartitionerClass extends Partitioner<Text,IntWritable> {
 
         @Override
         public int getPartition(Text key, IntWritable value, int numPartitions) {
-            //This will group the keys in the reducers based on the first word
-            String[] split = key.toString().split("\\s+");
-            String firstWord = split[0] + " " + split[1];
-            return (firstWord.hashCode() & Integer.MAX_VALUE) % numPartitions;
+            //This will group the keys in the reducers based on the decade
+            /*String[] split = key.toString().split("\\s+");
+            String firstWord = split[0] + " " + split[1];*/
+            String decade = key.toString().split("\\s+")[0];
+            return (decade.hashCode() & Integer.MAX_VALUE) % numPartitions;
         }
     }
 
