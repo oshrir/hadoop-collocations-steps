@@ -1,7 +1,6 @@
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -15,9 +14,23 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
+/* Fourth Step - Calculate Relative NPMI:
+   ======================================
+    Input - [decade] [w1] [w2] [npmi]
+    1. First emit [decade] as key each given value in the mapper with [npmi] as value.
+    2. Afterwards, emit the value of the mapper (as key) with [npmi] as value.
+    3. For a given [decade]:
+        a. [sum] = the npmis of bigrams in [decade].
+        b. Calculate [relnpmi] = [npmi] / [sum].
+        b. Emit every [decade] [w1] [w2] [npmi] as key with [relnpmi].
+
+    # Implemented a Partitioner class that is responsible for distributing a given [decade] to
+      the same reducer.
+    # Added a Combiner to optimize the runtime of this step. */
+
 public class Step4 {
 
-    private static final String astrix = "*";
+    private static final String punc = "!";
 
     public static class MyMapper extends Mapper<LongWritable, Text, Text, DoubleWritable> {
 
@@ -26,12 +39,12 @@ public class Step4 {
             String line = value.toString();
 
             String[] split = line.split("\\s+");
-            Text word = new Text(split[0] + " " + astrix);
+            Text decade = new Text(split[0] + " " + punc);
 
             DoubleWritable npmi = new DoubleWritable(Double.parseDouble(split[3]));
 
-            context.write(word, npmi); // changed
-            context.write(value, npmi); // changed
+            context.write(decade, npmi);
+            context.write(value, npmi);
         }
     }
 
@@ -42,7 +55,7 @@ public class Step4 {
                 throws IOException, InterruptedException {
 
             String[] split = key.toString().split("\\s+");
-            if (split[1].equals(astrix)) {
+            if (split[1].equals(punc)) {
                 sum = 0;
                 for (DoubleWritable val : values) {
                     sum += val.get();
@@ -61,10 +74,18 @@ public class Step4 {
         @Override
         public int getPartition(Text key, DoubleWritable value, int numPartitions) {
             //This will group the keys in the reducers based on the decade
-            /*String[] split = key.toString().split("\\s+");
-            String firstWord = split[0] + " " + split[1];*/
             String decade = key.toString().split("\\s+")[0];
-            return (decade.hashCode() & Integer.MAX_VALUE) % numPartitions;
+            return Math.abs(decade.hashCode()) % numPartitions;
+        }
+    }
+
+    public static class MyCombiner extends Reducer<Text, DoubleWritable, Text, DoubleWritable> {
+        public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
+            long sum = 0;
+            for (DoubleWritable val : values) {
+                sum += val.get();
+            }
+            context.write(key, new DoubleWritable(sum));
         }
     }
 
@@ -79,9 +100,9 @@ public class Step4 {
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         job.setPartitionerClass(PartitionerClass.class);
-        FileInputFormat.addInputPath(job, new Path(args[1])); //TODO Check the arguments entered
+        job.setCombinerClass(MyCombiner.class);
+        FileInputFormat.addInputPath(job, new Path(args[1]));
         FileOutputFormat.setOutputPath(job, new Path(args[2]));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
-
     }
 }
