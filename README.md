@@ -3,6 +3,8 @@ Stav Faran - 308096270, Oshri Rozenberg - 204354344
 
 Hadoop steps for AWS Collocation Extraction program.
 
+Results: https://dsp-assignment2-oshri.s3.amazonaws.com/result/
+
 Steps summary:
 -------------
 1. Data validation & Count number of bigrams in total and by decade.
