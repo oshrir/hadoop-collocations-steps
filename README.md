@@ -1,9 +1,22 @@
 # Hadoop MapReduce Collocations Extractor
 Stav Faran - 308096270, Oshri Rozenberg - 204354344
 
-Hadoop steps for AWS Collocation Extraction program.
+This application extracts collocations from the Google 2-grams dataset using Amazon EMR.
 
-Results: https://s3.console.aws.amazon.com/s3/buckets/dsp-assignment2-oshri/result
+Results are stored in the following bucket: https://s3.console.aws.amazon.com/s3/buckets/dsp-assignment2-oshri/result
+(result for minNPMI = 0.7, relMinNPMI = 0.4)
+
+Running instructions:
+--------------------
+1. Change the keyPair and bucketName fields in the Main.java file to be your key pair and bucket name for this run. In addition, change the log4jConfPath field to the appropriate path on your machine.
+2. Store your AWS credentials in `~/.aws/credentials`
+```
+   [default]
+   aws_access_key_id= ???
+   aws_secret_access_key= ???
+```
+3. Place all the map-reduce jars (Stepi.jar for i=1,2,3,4,5) into your bucket
+4. run using `java -jar ExtractCollocations.jar ExtractCollocations minNPMI relMinNPMI`
 
 Steps summary:
 -------------
@@ -46,7 +59,7 @@ Input - `[decade] [w1] [w2] [bgram count] [w1 count]`
 3. For a given `[w2]` in a given `[decade]`:
     a. `[sum]` = the occurrences of `[w2]` as a first word in a bigram in `[decade]`.
     b. Calculate `[npmi]` for `[w1] [w2]`.
-    b. Emit every `[decade] [w1] [w2]` as key with `[npmi]` as value.
+    c. Emit every `[decade] [w1] [w2]` as key with `[npmi]` as value.
     
 Fourth Step:
 -----------
@@ -56,7 +69,7 @@ Input - `[decade] [w1] [w2] [npmi]`
 3. For a given `[decade]`:
     a. `[sum]` = the npmis of bigrams in `[decade]`.
     b. Calculate `[relnpmi] = [npmi] / [sum]`.
-    b. Emit every `[decade] [w1] [w2] [npmi]` as key with `[relnpmi]`.
+    c. Emit every `[decade] [w1] [w2] [npmi]` as key with `[relnpmi]`.
     
 Fifth Step:
 ----------
