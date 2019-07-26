@@ -74,8 +74,9 @@ public class Step4 {
         @Override
         public int getPartition(Text key, DoubleWritable value, int numPartitions) {
             //This will group the keys in the reducers based on the decade
-            String decade = key.toString().split("\\s+")[0];
-            return Math.abs(decade.hashCode()) % numPartitions;
+            String decadeStr = key.toString().split("\\s+")[0];
+            int decade = Integer.parseInt(decadeStr) / 10;
+            return decade % numPartitions;
         }
     }
 

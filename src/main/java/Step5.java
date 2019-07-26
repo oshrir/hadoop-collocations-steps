@@ -38,8 +38,8 @@ public class Step5 {
             double relnpmi = Double.parseDouble(split[4]);
 
             if (isCollocation(npmi, relnpmi, minPmi, relMinPmi)) {
-                // key: [npmi] [decade]; value: [w1] [w2]
-                context.write(new Text(split[3] + " " + split[0]), new Text(split[1] + " " + split[2]));
+                // key: [decade] [npmi]; value: [w1] [w2]
+                context.write(new Text(split[0] + " " + split[3]), new Text(split[1] + " " + split[2]));
             }
         }
 
@@ -53,8 +53,8 @@ public class Step5 {
         public void reduce(Text key, Iterable<Text> values, Context context)
                 throws IOException, InterruptedException {
             String[] keySplit = key.toString().split(" ");
-            String npmi = keySplit[0];
-            String decade = keySplit[1];
+            String decade = keySplit[0];
+            String npmi = keySplit[1];
             String bigram = values.iterator().next().toString();
 
             Text newKey = new Text(decade + " " + bigram);
@@ -79,8 +79,9 @@ public class Step5 {
         @Override
         public int getPartition(Text key, Text value, int numPartitions) {
             //This will group the keys in the reducers based on the decade
-            String decade = key.toString().split("\\s+")[1];
-            return Math.abs(decade.hashCode()) % numPartitions;
+            String decadeStr = key.toString().split("\\s+")[0];
+            int decade = Integer.parseInt(decadeStr) / 10;
+            return decade % numPartitions;
         }
     }
 
@@ -101,6 +102,5 @@ public class Step5 {
         FileInputFormat.addInputPath(job, new Path(args[1]));
         FileOutputFormat.setOutputPath(job, new Path(args[2]));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
-
     }
 }
