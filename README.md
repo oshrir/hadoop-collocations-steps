@@ -3,7 +3,7 @@ Stav Faran - 308096270, Oshri Rozenberg - 204354344
 
 Hadoop steps for AWS Collocation Extraction program.
 
-Results: https://dsp-assignment2-oshri.s3.amazonaws.com/result/
+Results: https://s3.console.aws.amazon.com/s3/buckets/dsp-assignment2-oshri/result
 
 Steps summary:
 -------------
