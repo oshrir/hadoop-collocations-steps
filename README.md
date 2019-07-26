@@ -27,7 +27,9 @@ Steps summary:
 5. Extract Collocations.
 
 Added a Combiner in steps 1 and 4 in order to optimize the runtime of this step.
+
 Implemented a Comparator for step 5 in order to sort data by npmi (descending).
+
 Implemented a Partitioner class that is responsible for distributing:
 - a given pair of `[decade] [w1]` to the same reducer (In steps 2 and 3).
 - a given `[decade]` to the same reducer (In steps 4 and 5).
